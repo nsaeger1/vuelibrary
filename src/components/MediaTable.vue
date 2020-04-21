@@ -7,40 +7,36 @@
         <v-btn icon @click="testItem">
             <v-icon >mdi-export</v-icon>
         </v-btn>
-        <v-btn icon @click="addItem">
+        <v-btn icon @click="dialog=true">
             <v-icon >mdi-plus-circle</v-icon>
         </v-btn>
     </v-toolbar>
 
-    <List :library="library" :type="selected"/>
+    <List  :type="selected" :auth-user="authUser" v-if="authUser"/>
+        <Form :dialog="dialog" v-on:close-dialog="dialog=false" :auth-user="authUser"/>
     </v-card>
 </template>
 
 <script>
     import List from "@/components/List";
-    import EventBus from "@/main.js";
+    import Form from "./Form";
     export default {
         name: "MediaTable",
         components: {
+            Form,
             List,
         },
         props: {
-            types: {
-                type: Array,
-            },
-            library: {
-                type: Array,
-            },
+            authUser: {required: true}
         },
         data() {
             return {
-                selected: 'Game'
+                dialog: false,
+                selected: 'Library',
+                types: ['Library','Wish List'],
             }
         },
         methods: {
-          addItem() {
-              EventBus.$emit('add-item', this.selected);
-          },
           testItem() {
               this.$emit('test-item')
           }

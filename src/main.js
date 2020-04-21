@@ -4,6 +4,10 @@ import 'vuetify/dist/vuetify.min.css'
 import App from './App.vue'
 import firebase from "firebase";
 import {firestorePlugin} from "vuefire";
+import router from './router'
+import axios from 'axios'
+
+Vue.use(axios)
 
 Vue.config.productionTip = false;
 Vue.use(Vuetify);
@@ -22,5 +26,7 @@ new Vue({
       dark: true,
     }
   }),
-  render: h => h(App),
+
+  router,
+  render: h => h(App)
 }).$mount('#app');

@@ -1,238 +1,212 @@
+
 <template>
-    <v-app id="library">
-        <v-navigation-drawer
-                :src="'https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg'"
-                v-model="drawer"
-                app
-                clipped
-        >
-            <v-list dense>
-                <v-list-item @click="filter(0)">
-                    <v-list-item-action>
-                        <v-icon>mdi-all-inclusive</v-icon>
-                    </v-list-item-action>
-                    <v-list-item-content>
-                        <v-list-item-title>Dashboard</v-list-item-title>
-                    </v-list-item-content>
-                </v-list-item>
-                <v-list-item @click="filter(1)">
-                    <v-list-item-action>
-                        <v-icon>mdi-gamepad</v-icon>
-                    </v-list-item-action>
-                    <v-list-item-content>
-                        <v-list-item-title>Games</v-list-item-title>
-                    </v-list-item-content>
-                </v-list-item>
-                <v-list-item @click="filter(2)">
-                    <v-list-item-action>
-                        <v-icon>mdi-library</v-icon>
-                    </v-list-item-action>
-                    <v-list-item-content>
-                        <v-list-item-title>Books</v-list-item-title>
-                    </v-list-item-content>
-                </v-list-item>
-            </v-list>
-        </v-navigation-drawer>
-        <v-app-bar
-                app
-                clipped-left
-                color="primary"
-        >
-            <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-            <v-toolbar-title>Library</v-toolbar-title>
-            <v-spacer/>
-            <v-switch v-model="$vuetify.theme.dark"/>
+  <v-app id="library">
+    <v-navigation-drawer
+            :src="'https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg'"
+            app
+            clipped
+            permanent
+            width="200px"
+    >
+      <v-list dense>
+        <v-list-item>
+          <v-list-item-action>
+            <v-icon>mdi-all-inclusive</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title><router-link to="/">Home</router-link></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item >
+          <v-list-item-action>
+            <v-icon>mdi-gamepad</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title><router-link to="/library">Library</router-link></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item >
+          <v-list-item-action>
+            <v-icon>mdi-cart</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title><router-link to="/cart">Cart</router-link></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="login">
+          <v-list-item-action>
+            <v-icon>mdi-library</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Login</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+    <v-app-bar
+            app
+            clipped-left
+            color="primary"
+    >
+      <v-app-bar-nav-icon></v-app-bar-nav-icon>
+      <v-toolbar-title>Library</v-toolbar-title>
+      <v-spacer/>
+      <v-avatar v-if="authUser"><img :src="authUser.photoURL"></v-avatar>
+      <v-switch v-model="$vuetify.theme.dark"/>
 
-        </v-app-bar>
+    </v-app-bar>
 
-        <v-content>
-            <v-container fluid fill-height>
-                <MediaTable :types="types" :library="library" @test-item="testItem"/>
-                <Form :types="types.reduce((arr, type) => arr.concat(type.id), [])"/>
+    <v-content>
+      <router-view :auth-user="authUser"/>
+      <!--<v-container fluid fill-height>
+        <MediaTable :types="types" :library="library" @test-item="testItem"/>
+        <Form :types="types.reduce((arr, type) => arr.concat(type.id), [])"/>
 
-            </v-container>
-        </v-content>
+      </v-container>-->
+    </v-content>
 
-        <v-footer app>
-            <span>&copy; 2019</span>
-        </v-footer>
-    </v-app>
+    <v-footer app>
+      <span>&copy; 2019</span>
+    </v-footer>
+  </v-app>
 </template>
 
 <script>
-    var firebaseConfig = {
-        apiKey: "AIzaSyD_q3tf35Oc_CGJ3XNlWcKoEYdbdXlw92A",
-        authDomain: "aechs-basement.firebaseapp.com",
-        databaseURL: "https://aechs-basement.firebaseio.com",
-        projectId: "aechs-basement",
-        storageBucket: "aechs-basement.appspot.com",
-        messagingSenderId: "646280503808",
-        appId: "1:646280503808:web:644498bd3452a1e2b42ee5",
-        measurementId: "G-JMS34YF3ES"
-    };
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    import Form from "@/components/Form";
-    import MediaTable from "@/components/MediaTable";
-    import firebase from 'firebase';
+  import firebase from 'firebase';
+  import './components/firebaseInit'
+  export default {
+    name: 'App',
+    components: {
+      //MediaTable,
+     // Form,
+    },
+    data() {
+      return {
 
-    const db = firebase.firestore();
-    export default {
-        name: 'App',
-        components: {
-            MediaTable,
-            Form,
-        },
-        data() {
-            return {
-                drawer: false,
-                filterType: 0,
-                newItem: {
-                    name: '',
-                    players: [2, 4],
-                    avgTime: 30,
-                    pages: 450,
-                },
-                types: [],
-                library: [
-                    //new LibraryItem(new Item('Game', {name: 'Millennium Blades', minPlayer: 1, maxPlayer: 8, avgTime: 140,})),
-                    //new LibraryItem(new Item('Book', {title: 'Harry Potter', pages: 435})),
-                    //new LibraryItem(new Item('Book', {title: 'Wizards First Rule', pages: 435})),
-                    //new LibraryItem(new Item('Magazine', {title: 'Spider Man', pages: 35, issue: 34})),
-                    //new LibraryItem(new Item('Book', {title: 'Ender\'s Game', pages: 350,})),
-                    //new LibraryItem(new Item('Game', {name: 'Munchkin', minPlayers: 2, maxPlayer: 6, avgTime: 30,})),
-                    //new LibraryItem(new Item('Game', {name: 'Clank', minPlayers: 2, maxPlayer: 4, avgTime: 45,})),
-                    //new LibraryItem(new Item('Movie', {title: 'Princess Bride', runTime: 98, rating: 5})),
-                    //new LibraryItem(new Item('Computer', {Brand: 'Asus', RAM: 16, Graphics: 'Nvidia', hardrive: '1TB'})),
+        tempItem: {},
+        authUser: null,
+      }
+    },
+    methods: {
+      login() {
+        let provider = new firebase.auth.GoogleAuthProvider();
 
-                ],
-                tempItem: {},
-            }
-        },
-        firestore: {
-          //library: db.collection('Items')
-            types: db.collection('Types')
-        },
-        methods: {
-            testItem() {
-                let newItem = new LibraryItem(new Item('Game', {name: 'Millennium Blades', minPlayer: 1, maxPlayer: 8, avgTime: 140,}));
-                console.log(newItem)
-                db.collection('Items').add(newItem)
-            },
-            removeGame: function (game) {
-                this.games.splice(this.games.indexOf(game), 1);
-            },
-            removeBook: function (book) {
-                this.books.splice(this.books.indexOf(book), 1)
-            },
-            addItem(item) {
-                this.dialog = true;
-                this.selected = item;
-            },
-            editItem(item) {
-                this.newItem = item;
-                this.tempItem = {};
-                Object.assign(this.tempItem, item);
-                if (item.players) {
-                    this.newItem.game = true;
-                }
-                this.newItem.editing = true;
-                this.item = item.players ? 'Game' : 'Book';
-                this.dialog = true;
-            },
-            closeItem: function () {
-                if (this.newItem.editing) {
-                    Object.assign(this.newItem, this.tempItem)
-                }
-                this.dialog = false;
-                setTimeout(() => this.newItem = {
-                    name: '',
-                    players: [2, 4],
-                    avgTime: 30,
-                    pages: 450,
+        firebase.auth()
+        //.signInWithEmailAndPassword(email, password)
+                .signInWithPopup(provider)
+                .catch(function (error) {
+                  // Handle Errors here.
+                  //let errorCode = error.code;
+                 // let errorMessage = error.message;
+
+                  console.log(error);
                 });
-            },
-            saveItem: function (type, traits) {
-               new LibraryItem(new Item(type, traits))
-            },
-            filter: function (filter) {
-                this.filterType = filter;
-            },
-        },
-        computed: {
-           /* types: function () {
-                let array = [];
-                this.library.forEach(obj =>
-                    array.push(obj.mediaType())
-                );
-                return [...new Set(array)];
-                //return this.library.reduce((unique, item) => unique.include(item) ? unique : [...unique, item], [])
-            },*/
-            selectedTraits: function () {
 
-                return false;
-            }
-
-        },
-        mounted: function () {
-            if (localStorage.getItem('books')) {
-                this.books = JSON.parse(localStorage.getItem('books'));
-            }
-            if (localStorage.getItem('games')) {
-                this.games = JSON.parse(localStorage.getItem('games'));
-            }
-        },
-        watch: {
-            games: {
-                handler: function (newList) {
-                    localStorage.setItem('games', JSON.stringify(newList))
-                },
-                deep: true,
-            },
-            books: {
-                handler: function (newList) {
-                    localStorage.setItem('books', JSON.stringify(newList))
-                },
-                deep: true,
-            }
-        },
-        created() {
-            this.$bind('Types', db.collection('Types'))
-                .then(types => {
-                    console.log(types.reduce((arr, type) => arr.concat(type.id), []))
-                })
-            this.$bind('Items', db.collection('Items'))
-                .then(items => {
-                    console.log(items[0].type)
-                    items.forEach(item => this.library.push(new LibraryItem(new Item(item.type, item.traits))))
-
-                })
-
+      },
+      testItem() {
+        //let newItem = new Game('Millennium Blades', 1,8, 140,);
+       // console.log(newItem)
+      },
+      removeGame: function (game) {
+        this.games.splice(this.games.indexOf(game), 1);
+      },
+      addItem() {
+        this.dialog = true;
+      },
+      editItem(item) {
+        this.newItem = item;
+        this.tempItem = {};
+        Object.assign(this.tempItem, item);
+        if (item.players) {
+          this.newItem.game = true;
         }
+        this.newItem.editing = true;
+        this.item = item.players ? 'Game' : 'Book';
+        this.dialog = true;
+      },
+      closeItem: function () {
+        if (this.newItem.editing) {
+          Object.assign(this.newItem, this.tempItem)
+        }
+        this.dialog = false;
+        setTimeout(() => this.newItem = {
+          name: '',
+          players: [2, 4],
+          avgTime: 30,
+          pages: 450,
+        });
+      },
+
+      filter: function (filter) {
+        this.filterType = filter;
+      },
+    },
+    computed: {},
+    created: function() {
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          // User is signed in.
+          /*let photoURL = user.photoURL;
+          var displayName = user.displayName;
+          var email = user.email;
+          var uid = user.uid;*/
+          //store the logged in user in our app
+
+          //this.authUser = user;  // without custom model setup
+          this.authUser = new User(user);
+          console.log('Signed in as: ', this.authUser);
+
+        } else {
+          // User is signed out.
+          console.log('Not signed in.');
+
+          this.authUser = null
+        }
+      });
+    },
+
+  }
+  let User = function(firebaseUser ){
+    let m = {
+      displayName: '',
+      email: '',
+      photoURL: '',
+      uid: '',
+    };
+
+    if(firebaseUser){
+      m.displayName = firebaseUser.displayName ? firebaseUser.displayName : '';
+      m.email = firebaseUser.email ? firebaseUser.email : '';
+      m.photoURL = firebaseUser.photoURL ? firebaseUser.photoURL : '';
+      m.uid = firebaseUser.uid ? firebaseUser.uid : '';
     }
 
-    function LibraryItem(media) {
-        this.media = media;
+    return m;
+  }
 
-        this.mediaType = function () {
-            return this.media.type;
-        };
-    }
-
-    function Item(type, traits) {
-        this.type = type;
-        this.traits = traits;
-    }
 
 </script>
 
+
 <style>
-    #app {
-        font-family: Avenir, Helvetica, Arial, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-align: center;
-        color: #2c3e50;
-        margin-top: 60px;
-    }
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+}
+
+#nav {
+  padding: 30px;
+}
+
+#nav a {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+#nav a.router-link-exact-active {
+  color: #42b983;
+}
 </style>

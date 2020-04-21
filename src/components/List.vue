@@ -1,12 +1,12 @@
 <template>
     <div>
-        <v-data-table :headers="computedHeaders" :items="libraryDisplay">
-            <template v-slot:item.action="">
+        <v-data-table :headers="headers" :items="library">
+            <template v-slot:item.actions="{ item }">
                 <v-btn icon>
-                    <v-icon small class="mr-2">mdi-pencil</v-icon>
+                    <v-icon small class="mr-2" @click="ediGame(item)">mdi-pencil</v-icon>
                 </v-btn>
                 <v-btn icon>
-                    <v-icon small>mdi-delete</v-icon>
+                    <v-icon small @click="deleteGame(item)">mdi-delete</v-icon>
                 </v-btn>
             </template>
         </v-data-table>
@@ -14,6 +14,7 @@
 </template>
 
 <script>
+    import db from './firebaseInit'
 
     export default {
         name: "List",
@@ -21,56 +22,61 @@
         data() {
             return {
                 selected: null,
+                headers: [
+                    {
+                        text: 'Name',
+                        value: 'name',
+                    },
+                    {
+                        text: 'Min Players',
+                        value: 'minPlayers',
+                    },
+                    {
+                        text: 'Max Players',
+                        value: 'maxPlayers',
+                    },
+                    {
+                        text: 'Avg Time',
+                        value: 'avgTime',
+                    },
+                    {
+                        value: 'actions',
+                    },
+                ],
+                library: [],
+                test: [],
+
             }
         },
         props: {
-            library: {type: Array,},
             type: {type: String},
-            /*games: {
-                type: Array,
-                required: true,
-            },
-            books: {
-                type: Array,
-                required: true,
-            },
-            filtered: {
-                type: Number,
-                required:true,
-            }*/
+            authUser: {required: true},
         },
         methods: {
-            removeBook(book) {
-                this.$emit('remove-book', book);
+            removeGame() {
+                //TODO remove Game
             },
-            editBook(book) {
-                this.$emit('edit-book', book);
+            ediGame() {
+                //const index = this.library.indexOf(item)
+                //console.log(this.library[index])
+                //console.log(this.test[0].id)
+                this.test = db.collection('Users').doc(this.authUser.uid).collection('Wish List')
+
             },
-            addItem() {
-                this.$emit('add-item', this.selected);
+            deleteGame(item) {
+                const index = this.library.indexOf(item)
+                confirm('Are you sure you want to delete this item?') &&
+                db.collection('Games')
+                    .doc(this.library[index].id).delete()
             }
 
-        },
-        computed: {
-            libraryDisplay: function () {
-                let starter = this.library.filter(value => value.media.type === this.type);
-                let returnArray = [];
-                starter.forEach(obj =>
-                    returnArray.push(obj.media.traits));
-                return returnArray;
-            },
-            computedHeaders: function () {
-                let headerKey = [];
-                if (this.libraryDisplay.length > 0) {
-                    Object.keys(this.libraryDisplay[0]).forEach(trait => headerKey.push({
-                        text: trait.toUpperCase(),
-                        value: trait
-                    }));
-                    headerKey.push({text: 'Actions', value: 'action', sortable: false})
-                }
-                return headerKey;
 
-            },
+        },
+        firestore(){
+            return {
+                //library: db.collection('Games'),
+                library: db.collection('Users').doc(this.authUser.uid).collection(this.type)
+            }
         },
     }
 </script>
